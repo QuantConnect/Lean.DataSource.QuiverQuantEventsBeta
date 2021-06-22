@@ -14,18 +14,19 @@
  *
 */
 
+using System;
 using QuantConnect.Data;
+using QuantConnect.DataSource;
 using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Algorithm;
-using QuantConnect.DataSource;
 
 namespace QuantConnect.DataLibrary.Tests
 {
     /// <summary>
     /// Example algorithm using the custom data type as a source of alpha
     /// </summary>
-    public class CustomDataAlgorithm : QCAlgorithm
+    public class QuiverEventsBetaDataAlgorithm : QCAlgorithm
     {
         private Symbol _customDataSymbol;
         private Symbol _equitySymbol;
@@ -38,7 +39,7 @@ namespace QuantConnect.DataLibrary.Tests
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             _equitySymbol = AddEquity("SPY").Symbol;
-            _customDataSymbol = AddData<MyCustomDataType>(_equitySymbol).Symbol;
+            _customDataSymbol = AddData<QuiverEventsBeta>(_equitySymbol).Symbol;
         }
 
         /// <summary>
@@ -47,17 +48,23 @@ namespace QuantConnect.DataLibrary.Tests
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            var data = slice.Get<MyCustomDataType>();
+            var data = slice.Get<QuiverEventsBeta>();
             if (!data.IsNullOrEmpty())
             {
-                // based on the custom data property we will buy or short the underlying equity
-                if (data[_customDataSymbol].SomeCustomProperty == "buy")
+                var betaEvent = data[_customDataSymbol];
+                var isPresidentialElection2020 = betaEvent.EventName == "PresidentialElection2020";
+                
+                // The closer the election odds are, the higher we expect volatility to be, so we withdraw from the market.
+                if (isPresidentialElection2020 && betaEvent.FirstEventOdds >= 0.45m && betaEvent.FirstEventOdds <= 0.55m)
                 {
-                    SetHoldings(_equitySymbol, 1);
+                    var holdingsPercentage = Math.Abs(betaEvent.FirstEventOdds - betaEvent.SecondEventOdds);
+                    SetHoldings(_equitySymbol, holdingsPercentage);
                 }
-                else if (data[_customDataSymbol].SomeCustomProperty == "sell")
+                // Less volatility expected, let's ease back in to the market according to the confidence of the election
+                else if (isPresidentialElection2020)
                 {
-                    SetHoldings(_equitySymbol, -1);
+                    var holdingsPercentage = Math.Max(betaEvent.FirstEventOdds, betaEvent.SecondEventOdds);
+                    SetHoldings(_equitySymbol, holdingsPercentage);
                 }
             }
         }
