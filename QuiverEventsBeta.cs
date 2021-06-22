@@ -64,7 +64,7 @@ namespace QuantConnect.DataSource
         /// </summary>
         [ProtoMember(14)]
         [JsonProperty(PropertyName = "FirstEventBeta")]
-        public decimal FirstEventBeta { get; set; }
+        public decimal? FirstEventBeta { get; set; }
 
         /// <summary>
         /// Odds of the first event happening, based on betting markets
@@ -78,7 +78,7 @@ namespace QuantConnect.DataSource
         /// </summary>
         [ProtoMember(16)]
         [JsonProperty(PropertyName = "SecondEventBeta")]
-        public decimal SecondEventBeta { get; set; }
+        public decimal? SecondEventBeta { get; set; }
 
         /// <summary>
         /// Odds of the second event happening, based on betting markets
