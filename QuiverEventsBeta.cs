@@ -31,6 +31,11 @@ namespace QuantConnect.DataSource
     public class QuiverEventsBeta : BaseData
     {
         /// <summary>
+        /// Data source ID
+        /// </summary>
+        public static int DataSourceId { get; } = 2016;
+
+        /// <summary>
         /// The date of the events beta calculation
         /// </summary>
         [ProtoMember(10)]
